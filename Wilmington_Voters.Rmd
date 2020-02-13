@@ -1,0 +1,42 @@
+---
+title: 'Wilmington Voters'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Create filtering of registration sorting by:**
+
+1. ED and RD
+2. And also include Wilmington Housing Authority high-rises and properties 
+* This would be a separate address list
+3. Exclude non-voters by sorting by the date the person last voted with the intent to exclude non-voters (defined as someone who hasn’t voted for 4+ years, meaning if someone last voted in 2014, they’re a non-voter)
+* But including those who recently registered since November 2016 but have not had the time to vote in a Presidential election
+4. Sort by political party (D, R, and other)
+5. Sort by if someone is a consistent primary voter, or only votes in a general election
+
+
+```{r}
+# install.packages("here")
+library(here)
+
+# install.packages("tidyverse")
+library(tidyverse)
+
+# install.packages("readxl")
+library(readxl)
+
+# install.packages("janitor")
+library(janitor)
+```
+
+```{r}
+voters <- read_xlsx(here::here("ActiveFile-Wilm1thru8-20191015.xlsx"))
+```
+
+```{r}
+voters <- clean_names(voters)
+```
+
