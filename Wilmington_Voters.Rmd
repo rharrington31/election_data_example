@@ -33,10 +33,162 @@ library(janitor)
 ```
 
 ```{r}
+# Read data from Excel
 voters <- read_xlsx(here::here("ActiveFile-Wilm1thru8-20191015.xlsx"))
 ```
 
 ```{r}
+# Check column names
+colnames(voters)
+
+# Remove characters (such as "-") and convert column names to lowercase
 voters <- clean_names(voters)
+```
+
+```{r}
+# Get dimensions of the data frame (rows by columns)
+dim(voters)
+```
+
+```{r}
+# Understand all of the variables using a tidyverse function
+glimpse(voters)
+```
+
+```{r}
+# Understand all of the variables using a base function
+str(voters)
+```
+
+
+```{r}
+# See the first 6 observations
+head(voters)
+
+# See the last 100 observations
+tail(voters, n = 100)
+```
+
+```{r}
+# Look at the full dataset in a separate window
+View(voters)
+```
+
+
+Use the following tidyverse functions to explore data:
+
+* `select` - select columns
+* `filter` - select rows that match conditions that you provide
+* `summarize` - reduce multiple values down to a single value
+* `mutate` - create or transform variables
+* `group_by` - group by one (or more) variables
+* `ungroup` - remove the grouping variables
+* `arrange` - reorder rows based upon a variable
+
+```{r}
+voters %>% 
+  filter(party == "R") %>% 
+  arrange(desc(year_of_birth))
+```
+
+```{r}
+voters_zip_R <- 
+  voters %>% 
+  filter(party == "R") %>% 
+  group_by(home_zipcode) %>% 
+  summarize(count = n()) %>%
+  ungroup()
+```
+
+```{r}
+voters %>% 
+  # select(year_of_birth, ed, rd, home_zipcode, party, gen_hist_1) %>% 
+  group_by(gen_hist_1) %>% 
+  summarize(count = n()) %>% 
+  ungroup() %>% 
+  arrange(desc(count))
+
+voters %>% 
+  count(gen_hist_1, sort = T)
+```
+
+```{r}
+voters %>% 
+  count(rd, sort = T)
+
+voters_rd04 <-
+  voters %>% 
+  filter(rd == "04",
+         gen_hist_1 == "2018")
+```
+
+```{r}
+
+Sys.Date()
+
+file_name <- paste(Sys.Date(), "voters_rd04.csv", sep = "_")
+
+write_csv(x = voters_rd04,
+          path = here("Voters", file_name))
+
+```
+
+# Example of creating a graph
+
+```{r}
+voters %>% 
+  count(rd, party, name = "count") %>% 
+  mutate(rd = fct_reorder(rd, count),
+         
+         party = case_when(party == "D" ~ "Democrat",
+                           party == "R" ~ "Republican",
+                           party == "I" ~ "Independent",
+                           party == "L" ~ "Libertarian")) %>% 
+  ggplot() +
+  geom_col(aes(x = rd,
+               y = count),
+           fill = "red") +
+  coord_flip() +
+  facet_grid(~ party) +
+  theme_minimal()
+```
+
+```{r}
+crestview <-
+  voters %>% 
+  filter(str_detect(home_street, "MARKET"),
+         str_detect(home_no, "27[0-9]{2}"))
+```
+
+```{r}
+crest_rd04 <- 
+  crestview %>% 
+  union(voters_rd04)
+```
+
+```{r}
+wha <- read_xls(here::here("WHA Properties by Zip and Council.xls"),
+                skip = 3) %>% 
+  mutate(`Zip Code` = as.character(`Zip Code`))
+
+colnames(wha)
+colnames(voters)
+```
+
+```{r}
+voters_clean_address <- 
+  voters %>% 
+  mutate(Address = paste(home_no, home_street))
+```
+
+```{r}
+voters_clean_address %>% 
+  left_join(wha, by = c("Address" = "Address",
+                        "home_zipcode" = "Zip Code")) %>% 
+  filter(! is.na(`Parcel ID`)) %>% 
+  select(last_name, first_name, home_no, home_street, `Parcel ID`, `Property Type`, `Council Districts`) %>% 
+  count(home_no, home_street, sort = T) %>% 
+  mutate(total = sum(n),
+         percent = n / total)
 ```
 
